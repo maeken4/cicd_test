@@ -1,0 +1,240 @@
+name: GitHub Actions context playground
+
+run-name: >-
+  Context playground / ${{ github.event_name }} / ${{ inputs.profile || 'push-default' }}
+
+on:
+  # 手動実行では inputs コンテキストも観察できる。
+  workflow_dispatch:
+    inputs:
+      message:
+        description: ログに渡す練習用メッセージ
+        required: true
+        default: Hello from workflow_dispatch
+        type: string
+      dry_run:
+        description: boolean input の型を確認する
+        required: true
+        default: true
+        type: boolean
+      profile:
+        description: choice input の値を確認する
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+  # このファイルを変更した push でも実行し、workflow_dispatch との違いを比較する。
+  push:
+    paths:
+      - .github/workflows/hogehoge.yaml
+
+# コンテキストを見るだけなので、トークンの権限は読み取りに限定する。
+permissions:
+  contents: read
+
+env:
+  WORKFLOW_LEVEL_ENV: set-at-workflow-level
+  # Repository variable CONTEXT_DEMO_VAR を作ると、値がここに現れる。
+  REPOSITORY_VAR_SAMPLE: ${{ vars.CONTEXT_DEMO_VAR || '(CONTEXT_DEMO_VAR is not set)' }}
+
+jobs:
+  prepare:
+    name: Prepare job outputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      generated_value: ${{ steps.produce.outputs.generated_value }}
+      message_length: ${{ steps.produce.outputs.message_length }}
+
+    env:
+      JOB_LEVEL_ENV: set-in-prepare-job
+
+    steps:
+      - name: Create step and job outputs
+        id: produce
+        shell: bash
+        env:
+          INPUT_MESSAGE: ${{ inputs.message || '(no message on this event)' }}
+        run: |
+          set -euo pipefail
+          printf 'generated_value=run-%s-attempt-%s\n' \
+            "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+          printf 'message_length=%s\n' "${#INPUT_MESSAGE}" >> "$GITHUB_OUTPUT"
+
+      - name: Dump contexts available in the prepare job
+        shell: bash
+        env:
+          GITHUB_CONTEXT_JSON: ${{ toJSON(github) }}
+          ENV_CONTEXT_JSON: ${{ toJSON(env) }}
+          VARS_CONTEXT_JSON: ${{ toJSON(vars) }}
+          JOB_CONTEXT_JSON: ${{ toJSON(job) }}
+          STEPS_CONTEXT_JSON: ${{ toJSON(steps) }}
+          RUNNER_CONTEXT_JSON: ${{ toJSON(runner) }}
+          INPUTS_CONTEXT_JSON: ${{ toJSON(inputs) }}
+        run: |
+          set -euo pipefail
+
+          dump_json() {
+            local title="$1"
+            local value="$2"
+            echo "::group::${title}"
+            printf '%s\n' "$value" | jq .
+            echo '::endgroup::'
+          }
+
+          # github.token は機密値なので、JSON を表示する直前に削除する。
+          github_without_token="$(printf '%s\n' "$GITHUB_CONTEXT_JSON" | jq 'del(.token)')"
+          dump_json 'github context (token removed)' "$github_without_token"
+          dump_json 'env context' "$ENV_CONTEXT_JSON"
+          dump_json 'vars context' "$VARS_CONTEXT_JSON"
+          dump_json 'job context' "$JOB_CONTEXT_JSON"
+          dump_json 'steps context' "$STEPS_CONTEXT_JSON"
+          dump_json 'runner context' "$RUNNER_CONTEXT_JSON"
+          dump_json 'inputs context' "$INPUTS_CONTEXT_JSON"
+
+  observe:
+    name: Observe contexts / ${{ matrix.profile }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    continue-on-error: ${{ matrix.experimental }}
+
+    # 2通り実行することで matrix と strategy の値の変化も確認できる。
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - profile: baseline
+            os: ubuntu-latest
+            sample_version: '1.0'
+            experimental: false
+          - profile: experimental
+            os: ubuntu-latest
+            sample_version: '2.0-beta'
+            experimental: true
+
+    env:
+      JOB_LEVEL_ENV: set-in-observe-job
+      VALUE_FROM_NEEDS: ${{ needs.prepare.outputs.generated_value }}
+      VALUE_FROM_MATRIX: ${{ matrix.sample_version }}
+      VALUE_FROM_INPUTS: ${{ inputs.profile || '(no profile on this event)' }}
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Create a successful step result
+        id: successful_step
+        shell: bash
+        env:
+          INPUT_MESSAGE: ${{ inputs.message || '(no message on this event)' }}
+        run: |
+          set -euo pipefail
+          # jq 経由なら、入力値をシェルコードとして展開せず安全に表示できる。
+          printf '%s' "$INPUT_MESSAGE" | jq -Rs '{input_message: .}'
+          printf 'result=%s\n' 'success-output' >> "$GITHUB_OUTPUT"
+          printf 'DYNAMIC_ENV=%s\n' 'written-through-GITHUB_ENV' >> "$GITHUB_ENV"
+
+      - name: Create an expected failure for the steps context
+        id: tolerated_failure
+        shell: bash
+        continue-on-error: true
+        run: |
+          echo 'This step exits with 7, but continue-on-error keeps the job running.'
+          exit 7
+
+      - name: Dump all observable contexts
+        if: ${{ always() }}
+        shell: bash
+        env:
+          STEP_LEVEL_ENV: set-only-on-the-dump-step
+          GITHUB_CONTEXT_JSON: ${{ toJSON(github) }}
+          ENV_CONTEXT_JSON: ${{ toJSON(env) }}
+          VARS_CONTEXT_JSON: ${{ toJSON(vars) }}
+          JOB_CONTEXT_JSON: ${{ toJSON(job) }}
+          STEPS_CONTEXT_JSON: ${{ toJSON(steps) }}
+          RUNNER_CONTEXT_JSON: ${{ toJSON(runner) }}
+          STRATEGY_CONTEXT_JSON: ${{ toJSON(strategy) }}
+          MATRIX_CONTEXT_JSON: ${{ toJSON(matrix) }}
+          NEEDS_CONTEXT_JSON: ${{ toJSON(needs) }}
+          INPUTS_CONTEXT_JSON: ${{ toJSON(inputs) }}
+          GITHUB_TOKEN_IS_AVAILABLE: ${{ secrets.GITHUB_TOKEN != '' }}
+          DEMO_SECRET_IS_AVAILABLE: ${{ secrets.CONTEXT_DEMO_SECRET != '' }}
+          LOCKFILE_HASH: ${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}
+        run: |
+          set -euo pipefail
+
+          dump_json() {
+            local title="$1"
+            local value="$2"
+            echo "::group::${title}"
+            printf '%s\n' "$value" | jq .
+            echo '::endgroup::'
+          }
+
+          github_without_token="$(printf '%s\n' "$GITHUB_CONTEXT_JSON" | jq 'del(.token)')"
+          dump_json 'github context (token removed)' "$github_without_token"
+          dump_json 'github.event object' "$(printf '%s\n' "$GITHUB_CONTEXT_JSON" | jq '.event')"
+          dump_json 'env context' "$ENV_CONTEXT_JSON"
+          dump_json 'vars context' "$VARS_CONTEXT_JSON"
+          dump_json 'job context' "$JOB_CONTEXT_JSON"
+          dump_json 'steps context' "$STEPS_CONTEXT_JSON"
+          dump_json 'runner context' "$RUNNER_CONTEXT_JSON"
+          dump_json 'strategy context' "$STRATEGY_CONTEXT_JSON"
+          dump_json 'matrix context' "$MATRIX_CONTEXT_JSON"
+          dump_json 'needs context' "$NEEDS_CONTEXT_JSON"
+          dump_json 'inputs context' "$INPUTS_CONTEXT_JSON"
+
+          echo '::group::selected default environment variables'
+          for variable_name in \
+            CI GITHUB_ACTION GITHUB_ACTOR GITHUB_ACTOR_ID GITHUB_API_URL \
+            GITHUB_BASE_REF GITHUB_EVENT_NAME GITHUB_EVENT_PATH GITHUB_GRAPHQL_URL \
+            GITHUB_HEAD_REF GITHUB_JOB GITHUB_REF GITHUB_REF_NAME \
+            GITHUB_REF_PROTECTED GITHUB_REF_TYPE GITHUB_REPOSITORY \
+            GITHUB_REPOSITORY_ID GITHUB_REPOSITORY_OWNER GITHUB_REPOSITORY_OWNER_ID \
+            GITHUB_RETENTION_DAYS GITHUB_RUN_ATTEMPT GITHUB_RUN_ID GITHUB_RUN_NUMBER \
+            GITHUB_SERVER_URL GITHUB_SHA GITHUB_TRIGGERING_ACTOR GITHUB_WORKFLOW \
+            GITHUB_WORKFLOW_REF GITHUB_WORKFLOW_SHA GITHUB_WORKSPACE RUNNER_ARCH \
+            RUNNER_NAME RUNNER_OS RUNNER_TEMP RUNNER_TOOL_CACHE; do
+            printf '%-30s = %s\n' "$variable_name" "${!variable_name-<unset>}"
+          done
+          echo '::endgroup::'
+
+          echo '::group::all process environment variable names (values hidden)'
+          compgen -e | LC_ALL=C sort
+          echo '::endgroup::'
+
+          echo '::group::derived values and secret availability'
+          printf 'DYNAMIC_ENV                   = %s\n' "$DYNAMIC_ENV"
+          printf 'LOCKFILE_HASH                 = %s\n' "${LOCKFILE_HASH:-<no matching lockfile>}"
+          printf 'GITHUB_TOKEN_IS_AVAILABLE     = %s\n' "$GITHUB_TOKEN_IS_AVAILABLE"
+          printf 'DEMO_SECRET_IS_AVAILABLE      = %s\n' "$DEMO_SECRET_IS_AVAILABLE"
+          echo 'secrets context values are intentionally not printed.'
+          echo 'jobs context is only available while setting outputs in a reusable workflow.'
+          echo '::endgroup::'
+
+      - name: Write a compact job summary
+        if: ${{ always() }}
+        shell: bash
+        env:
+          MATRIX_PROFILE: ${{ matrix.profile }}
+          GENERATED_VALUE: ${{ needs.prepare.outputs.generated_value }}
+          FAILED_OUTCOME: ${{ steps.tolerated_failure.outcome }}
+          FAILED_CONCLUSION: ${{ steps.tolerated_failure.conclusion }}
+        run: |
+          {
+            echo '## Context playground'
+            echo
+            printf -- '- Matrix profile: `%s`\n' "$MATRIX_PROFILE"
+            printf -- '- Job output via `needs`: `%s`\n' "$GENERATED_VALUE"
+            printf -- '- Tolerated step outcome: `%s`\n' "$FAILED_OUTCOME"
+            printf -- '- Tolerated step conclusion: `%s`\n' "$FAILED_CONCLUSION"
+            echo '- Full context dumps are available in the grouped step logs.'
+          } >> "$GITHUB_STEP_SUMMARY"
