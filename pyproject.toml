@@ -1,0 +1,37 @@
+[project]
+name = "cicd-test"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.2",
+]
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+addopts = [
+    "-ra",
+    "--strict-config",
+    "--strict-markers",
+]
+pythonpath = ["."]
+testpaths = ["tests"]
+xfail_strict = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+extend-select = [
+    "B",   # flake8-bugbear
+    "I",   # isort
+    "SIM", # flake8-simplify
+    "UP",  # pyupgrade
+]
