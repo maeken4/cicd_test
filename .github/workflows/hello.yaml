@@ -48,4 +48,12 @@ jobs:
             # ifの力で実行できる。ただしgoodby全体は失敗扱い
             - run: echo "hihihi"
               if: failure()
+    goodby2:
+        needs: [hello, goodby]
+        runs-on: ubuntu-latest
+        steps:
+            - run: sleep 2
+    goodby3:
+        needs: [hello, goodby2]
+        runs-on: ubuntu-24.04-arm
 
