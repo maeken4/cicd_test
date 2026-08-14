@@ -1,6 +1,7 @@
 # 学習用の目印: 作者が決めた識別子は `_hogee`、表示名は ` hogee` で終える。
 # GitHub Actions、利用する Action、YAML、Bash が定める名前には付けない。
 name: GitHub Actions context playground hogee
+# ↑name は「ワークフロー自体の名前」、run-name は「ワークフローを1回実行した記録の名前
 
 # `>` は、インデントされた各行の改行をスペースに畳んで1つの文字列にする YAML 文法。
 # 末尾の `-` は、文字列の最後に付く改行を削除する指定。
@@ -14,6 +15,7 @@ run-name: >-
   e
   ${{ github.event_name }} /
   ${{ inputs.profile_hogee || 'push-default' }} /
+  ${{ github.action}}
   hogee
 
 on:
@@ -40,10 +42,11 @@ on:
           - staging
           - production
 
-  # このファイルを変更した push でも実行し、workflow_dispatch との違いを比較する。
+  # `paths`以下が変更されたpushで動く。指定したdirは以下の変更を検知
   push:
     paths:
       - .github/workflows/hogehoge.yaml
+      - '!ignore/**'
 
 # コンテキストを見るだけなので、トークンの権限は読み取りに限定する。
 permissions:
@@ -56,7 +59,7 @@ env:
 
 jobs:
   prepare_hogee:
-    name: Prepare job outputs hogee
+    name: Prepare job outputs hogeeの名前
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
