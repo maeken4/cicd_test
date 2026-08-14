@@ -1,4 +1,4 @@
-name: Hello
+name: Helloとgoodby(hello.yamlに対応するworkflow)
 on: push
 jobs:
     hello:
@@ -9,10 +9,56 @@ jobs:
                 echo "hello, world"
                 tree | cat
                 ls
-            - uses: actions/checkout@v4
-              with:
+            - uses: actions/checkout@v7
+              with: # どのブランチをチェックアウトするか。省略したら、コミットされたbranchになる。
                 ref: main
             - run: |
-                cat
                 ls
                 whoami
+                tree
+                python --version
+            - uses: actions/checkout@v7
+            - run: >
+                ls
+            - uses: actions/setup-python@v7
+              with:
+                python-version: "3.14"
+            - run: |
+                python --version
+                python main.py
+    goodby:
+        name: goodbyの表示名。goodbyはid扱いでこっちが表示用
+        needs: hello
+        if: ${{success() && contains(github.ref, 'bra') && github.actor == 'maeken4'}}
+        timeout-minutes: 30
+        runs-on: ubuntu-latest
+        steps:
+            # jobが分かれているので、この段階ではcheckoutされておらず
+            # main.pyとかもなくてエラーになる
+
+            # GitHub Actionsの run は通常、
+            # コマンドがゼロ以外の終了コードを返すと、その時点でステップを失敗させます。
+            # 失敗すると同じジョブの後続ステップも通常はスキップされます。(if failureとかでもない限り)
+            - run: |
+                python --version
+                python main.py
+                python --version
+            # これはスキップされて実行されない
+            - uses: actions/checkout@v7
+            # ifの力で実行できる。ただしgoodby全体は失敗扱い
+            - run: echo "hihihi"
+              if: failure()
+    goodby2:
+        needs: [hello, goodby]
+        runs-on: ubuntu-latest
+        steps:
+            - run: sleep 2
+    goodby3:
+        needs: [hello]
+        runs-on: ubuntu-24.04-arm
+        steps:
+            - run: | # bashのトレーシングオプションを有効化し、実行したコマンドをログ実行。
+                set -x
+                date
+                hostname
+
