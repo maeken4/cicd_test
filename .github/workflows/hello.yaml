@@ -9,8 +9,8 @@ jobs:
                 echo "hello, world"
                 tree | cat
                 ls
-            - uses: actions/checkout@v4
-              with:
+            - uses: actions/checkout@v7
+              with: # どのブランチをチェックアウトするか。省略したら、コミットされたbranchになる。
                 ref: main
             - run: |
                 cat
