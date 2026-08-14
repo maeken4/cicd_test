@@ -9,5 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: gh pr comment "${GITHUB_HEAD_REF}" --body "hello, ${GITHUB_ACTOR}!!!"
+      - run: gh pr comment "${GITHUB_HEAD_REF}" --body "hello,   actor ${{github.actor}}, run_id ${{github.run_id}}, head_ref ${{github.head_ref}}, runneros ${{runner.os}}"
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}} #Github CLI用クレデンシャル
