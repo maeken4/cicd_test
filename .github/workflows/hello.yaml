@@ -54,7 +54,7 @@ jobs:
         steps:
             - run: sleep 2
     goodby3:
-        needs: [hello, goodby2]
+        needs: [hello]
         runs-on: ubuntu-24.04-arm
         steps:
             - run: | # bashのトレーシングオプションを有効化し、実行したコマンドをログ実行。
