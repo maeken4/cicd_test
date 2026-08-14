@@ -1,4 +1,4 @@
-name: Helloとgoodby(hello.yamlに対応するworkflow.helloとgoodby, goodby2, goodby3を含む)
+name: Helloとgoodby(hello.yamlに対応するworkflow)
 on: push
 jobs:
     hello:
