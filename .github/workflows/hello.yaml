@@ -56,4 +56,9 @@ jobs:
     goodby3:
         needs: [hello, goodby2]
         runs-on: ubuntu-24.04-arm
+        steps:
+            - run: | # bashのトレーシングオプションを有効化し、実行したコマンドをログ実行。
+                set -x
+                date
+                hostname
 
