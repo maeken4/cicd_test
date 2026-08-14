@@ -29,7 +29,7 @@ jobs:
     goodby:
         name: goodbyの表示名。goodbyはid扱いでこっちが表示用
         needs: hello
-        if: success()
+        if: ${{success() && contains(github.ref, 'bra') && github.actor == 'maeken4'}}
         timeout-minutes: 30
         runs-on: ubuntu-latest
         steps:
@@ -45,4 +45,6 @@ jobs:
                 python --version
             # これはスキップされて実行されない
             - uses: actions/checkout@v7
+            - run: echo "hihihi"
+              if: failure()
 
