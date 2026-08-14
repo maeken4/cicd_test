@@ -1,4 +1,4 @@
-name: Hello
+name: Helloとgoodby
 on: push
 jobs:
     hello:
@@ -38,13 +38,14 @@ jobs:
 
             # GitHub Actionsの run は通常、
             # コマンドがゼロ以外の終了コードを返すと、その時点でステップを失敗させます。
-            # 失敗すると同じジョブの後続ステップも通常はスキップされます。
+            # 失敗すると同じジョブの後続ステップも通常はスキップされます。(if failureとかでもない限り)
             - run: |
                 python --version
                 python main.py
                 python --version
             # これはスキップされて実行されない
             - uses: actions/checkout@v7
+            # ifの力で実行できる。ただしgoodby全体は失敗扱い
             - run: echo "hihihi"
               if: failure()
 
