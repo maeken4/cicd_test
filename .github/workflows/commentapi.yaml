@@ -1,13 +1,16 @@
 name: Comment API
-on: pull_request
+on: 
+  pull_request:
+    types: [opened, reopened, synchronize]
 jobs:
-  comment:
+  commentdayon:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}} # GitHub CLI用クレデンシャル
     permissions: # GITHUB_TOKENの権限を設定
       pull-requests: write # PRに対するwrite権限
       contents: read # ソースコードに対するread権限
     steps:
       - uses: actions/checkout@v7
-      - run: gh pr comment "${GITHUB_HEAD_REF}" --body "hello, ${GITHUB_ACTOR}!!!"
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}} #Github CLI用クレデンシャル
+      - run: gh pr comment "${{ github.event.pull_request.number }}" --body "hello, ${GITHUB_ACTOR}!!!"
+      - run: gh pr comment "${GITHUB_HEAD_REF}" --body "hello, actor ${{ github.actor }}, run_id ${{ github.run_id }}, head_ref ${{ github.head_ref }}, runneros ${{ runner.os }}"
