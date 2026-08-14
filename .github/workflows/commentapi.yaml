@@ -1,0 +1,13 @@
+name: Comment API
+on: pull_request
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    permissions: # GITHUB_TOKENの権限を設定
+      pull-requests: write # PRに対するwrite権限
+      contents: read # ソースコードに対するread権限
+    steps:
+      - uses: actions/checkout@v7
+      - run: gh pr comment "${GITHUB_HEAD_REF}" --body "hello, ${GITHUB_ACTOR}!!!"
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}} #Github CLI用クレデンシャル
