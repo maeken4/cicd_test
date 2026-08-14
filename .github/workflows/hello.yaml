@@ -29,6 +29,9 @@ jobs:
     goodby:
         runs-on: ubuntu-latest
         steps:
+            # jobが分かれているので、この段階ではcheckoutされておらず
+            # main.pyとかもなくてエラーになる
             - run: |
                 python --version
                 python main.py
+                python --version
