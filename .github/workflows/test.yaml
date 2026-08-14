@@ -1,4 +1,4 @@
-name: Test
+name: Test-hogehogehoge
 
 on:
   push:
@@ -9,35 +9,35 @@ permissions:
   contents: read
 
 concurrency:
-  group: test-${{ github.workflow }}-${{ github.ref }}
+  group: test-${{ github.workflow }}-${{ github.ref }}-hogehogehoge
   cancel-in-progress: true
 
 jobs:
-  test:
+  test-hogehogehoge:
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
-      - name: Check out the repository
+      - name: Check out the repository-hogehogehoge
         uses: actions/checkout@v7
 
-      - name: Install uv
+      - name: Install uv-hogehogehoge
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           version: "0.11.32"
           enable-cache: true
 
-      - name: Install Python
+      - name: Install Python-hogehogehoge
         run: uv python install
 
-      - name: Install dependencies
+      - name: Install dependencies-hogehogehoge
         run: uv sync --locked --dev
 
-      - name: Lint
+      - name: Lint-hogehogehoge
         run: uv run ruff check .
 
-      - name: Check formatting
+      - name: Check formatting-hogehogehoge
         run: uv run ruff format --check .
 
-      - name: Run tests
+      - name: Run tests-hogehogehoge
         run: uv run pytest

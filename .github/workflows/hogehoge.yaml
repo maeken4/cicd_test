@@ -1,23 +1,36 @@
-name: GitHub Actions context playground
+# 学習用の目印: 作者が決めた識別子は `_hogee`、表示名は ` hogee` で終える。
+# GitHub Actions、利用する Action、YAML、Bash が定める名前には付けない。
+name: GitHub Actions context playground hogee
 
+# `>` は、インデントされた各行の改行をスペースに畳んで1つの文字列にする YAML 文法。
+# 末尾の `-` は、文字列の最後に付く改行を削除する指定。
+# `${{ ... }}` は、GitHub Actions のコンテキストや式を埋め込む構文。
 run-name: >-
-  Context playground / ${{ github.event_name }} / ${{ inputs.profile || 'push-default' }}
+  Context playground /
+  a
+  b
+  c
+  d
+  e
+  ${{ github.event_name }} /
+  ${{ inputs.profile_hogee || 'push-default' }} /
+  hogee
 
 on:
   # 手動実行では inputs コンテキストも観察できる。
   workflow_dispatch:
     inputs:
-      message:
+      message_hogee:
         description: ログに渡す練習用メッセージ
         required: true
-        default: Hello from workflow_dispatch
+        default: Hello from workflow_dispatch dayo
         type: string
-      dry_run:
+      dry_run_hogee:
         description: boolean input の型を確認する
         required: true
         default: true
         type: boolean
-      profile:
+      profile_hogee:
         description: choice input の値を確認する
         required: true
         default: development
@@ -37,71 +50,71 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_LEVEL_ENV: set-at-workflow-level
-  # Repository variable CONTEXT_DEMO_VAR を作ると、値がここに現れる。
-  REPOSITORY_VAR_SAMPLE: ${{ vars.CONTEXT_DEMO_VAR || '(CONTEXT_DEMO_VAR is not set)' }}
+  WORKFLOW_LEVEL_ENV_hogee: set-at-workflow-level
+  # Repository variable CONTEXT_DEMO_VAR_hogee を作ると、値がここに現れる。
+  REPOSITORY_VAR_SAMPLE_hogee: ${{ vars.CONTEXT_DEMO_VAR_hogee || '(CONTEXT_DEMO_VAR_hogee is not set)' }}
 
 jobs:
-  prepare:
-    name: Prepare job outputs
+  prepare_hogee:
+    name: Prepare job outputs hogee
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      generated_value: ${{ steps.produce.outputs.generated_value }}
-      message_length: ${{ steps.produce.outputs.message_length }}
+      generated_value_hogee: ${{ steps.produce_hogee.outputs.generated_value_hogee }}
+      message_length_hogee: ${{ steps.produce_hogee.outputs.message_length_hogee }}
 
     env:
-      JOB_LEVEL_ENV: set-in-prepare-job
+      JOB_LEVEL_ENV_hogee: set-in-prepare-job
 
     steps:
-      - name: Create step and job outputs
-        id: produce
+      - name: Create step and job outputs hogee
+        id: produce_hogee
         shell: bash
         env:
-          INPUT_MESSAGE: ${{ inputs.message || '(no message on this event)' }}
+          INPUT_MESSAGE_hogee: ${{ inputs.message_hogee || '(no message on this event)' }}
         run: |
           set -euo pipefail
-          printf 'generated_value=run-%s-attempt-%s\n' \
+          printf 'generated_value_hogee=run-%s-attempt-%s\n' \
             "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
-          printf 'message_length=%s\n' "${#INPUT_MESSAGE}" >> "$GITHUB_OUTPUT"
+          printf 'message_length_hogee=%s\n' "${#INPUT_MESSAGE_hogee}" >> "$GITHUB_OUTPUT"
 
-      - name: Dump contexts available in the prepare job
+      - name: Dump contexts available in the prepare job hogee
         shell: bash
         env:
-          GITHUB_CONTEXT_JSON: ${{ toJSON(github) }}
-          ENV_CONTEXT_JSON: ${{ toJSON(env) }}
-          VARS_CONTEXT_JSON: ${{ toJSON(vars) }}
-          JOB_CONTEXT_JSON: ${{ toJSON(job) }}
-          STEPS_CONTEXT_JSON: ${{ toJSON(steps) }}
-          RUNNER_CONTEXT_JSON: ${{ toJSON(runner) }}
-          INPUTS_CONTEXT_JSON: ${{ toJSON(inputs) }}
+          GITHUB_CONTEXT_JSON_hogee: ${{ toJSON(github) }}
+          ENV_CONTEXT_JSON_hogee: ${{ toJSON(env) }}
+          VARS_CONTEXT_JSON_hogee: ${{ toJSON(vars) }}
+          JOB_CONTEXT_JSON_hogee: ${{ toJSON(job) }}
+          STEPS_CONTEXT_JSON_hogee: ${{ toJSON(steps) }}
+          RUNNER_CONTEXT_JSON_hogee: ${{ toJSON(runner) }}
+          INPUTS_CONTEXT_JSON_hogee: ${{ toJSON(inputs) }}
         run: |
           set -euo pipefail
 
-          dump_json() {
-            local title="$1"
-            local value="$2"
-            echo "::group::${title}"
-            printf '%s\n' "$value" | jq .
+          dump_json_hogee() {
+            local title_hogee="$1"
+            local value_hogee="$2"
+            echo "::group::${title_hogee}"
+            printf '%s\n' "$value_hogee" | jq .
             echo '::endgroup::'
           }
 
           # github.token は機密値なので、JSON を表示する直前に削除する。
-          github_without_token="$(printf '%s\n' "$GITHUB_CONTEXT_JSON" | jq 'del(.token)')"
-          dump_json 'github context (token removed)' "$github_without_token"
-          dump_json 'env context' "$ENV_CONTEXT_JSON"
-          dump_json 'vars context' "$VARS_CONTEXT_JSON"
-          dump_json 'job context' "$JOB_CONTEXT_JSON"
-          dump_json 'steps context' "$STEPS_CONTEXT_JSON"
-          dump_json 'runner context' "$RUNNER_CONTEXT_JSON"
-          dump_json 'inputs context' "$INPUTS_CONTEXT_JSON"
+          github_without_token_hogee="$(printf '%s\n' "$GITHUB_CONTEXT_JSON_hogee" | jq 'del(.token)')"
+          dump_json_hogee 'github context (token removed)' "$github_without_token_hogee"
+          dump_json_hogee 'env context' "$ENV_CONTEXT_JSON_hogee"
+          dump_json_hogee 'vars context' "$VARS_CONTEXT_JSON_hogee"
+          dump_json_hogee 'job context' "$JOB_CONTEXT_JSON_hogee"
+          dump_json_hogee 'steps context' "$STEPS_CONTEXT_JSON_hogee"
+          dump_json_hogee 'runner context' "$RUNNER_CONTEXT_JSON_hogee"
+          dump_json_hogee 'inputs context' "$INPUTS_CONTEXT_JSON_hogee"
 
-  observe:
-    name: Observe contexts / ${{ matrix.profile }}
-    needs: prepare
-    runs-on: ${{ matrix.os }}
+  observe_hogee:
+    name: Observe contexts / ${{ matrix.profile_hogee }} / hogee
+    needs: prepare_hogee
+    runs-on: ${{ matrix.os_hogee }}
     timeout-minutes: 5
-    continue-on-error: ${{ matrix.experimental }}
+    continue-on-error: ${{ matrix.experimental_hogee }}
 
     # 2通り実行することで matrix と strategy の値の変化も確認できる。
     strategy:
@@ -109,91 +122,91 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - profile: baseline
-            os: ubuntu-latest
-            sample_version: '1.0'
-            experimental: false
-          - profile: experimental
-            os: ubuntu-latest
-            sample_version: '2.0-beta'
-            experimental: true
+          - profile_hogee: baseline
+            os_hogee: ubuntu-latest
+            sample_version_hogee: '1.0'
+            experimental_hogee: false
+          - profile_hogee: experimental
+            os_hogee: ubuntu-latest
+            sample_version_hogee: '2.0-beta'
+            experimental_hogee: true
 
     env:
-      JOB_LEVEL_ENV: set-in-observe-job
-      VALUE_FROM_NEEDS: ${{ needs.prepare.outputs.generated_value }}
-      VALUE_FROM_MATRIX: ${{ matrix.sample_version }}
-      VALUE_FROM_INPUTS: ${{ inputs.profile || '(no profile on this event)' }}
+      JOB_LEVEL_ENV_hogee: set-in-observe-job
+      VALUE_FROM_NEEDS_hogee: ${{ needs.prepare_hogee.outputs.generated_value_hogee }}
+      VALUE_FROM_MATRIX_hogee: ${{ matrix.sample_version_hogee }}
+      VALUE_FROM_INPUTS_hogee: ${{ inputs.profile_hogee || '(no profile on this event)' }}
 
     steps:
-      - name: Check out the repository
+      - name: Check out the repository hogee
         uses: actions/checkout@v4
         with:
           persist-credentials: false
 
-      - name: Create a successful step result
-        id: successful_step
+      - name: Create a successful step result hogee
+        id: successful_step_hogee
         shell: bash
         env:
-          INPUT_MESSAGE: ${{ inputs.message || '(no message on this event)' }}
+          INPUT_MESSAGE_hogee: ${{ inputs.message_hogee || '(no message on this event)' }}
         run: |
           set -euo pipefail
           # jq 経由なら、入力値をシェルコードとして展開せず安全に表示できる。
-          printf '%s' "$INPUT_MESSAGE" | jq -Rs '{input_message: .}'
-          printf 'result=%s\n' 'success-output' >> "$GITHUB_OUTPUT"
-          printf 'DYNAMIC_ENV=%s\n' 'written-through-GITHUB_ENV' >> "$GITHUB_ENV"
+          printf '%s' "$INPUT_MESSAGE_hogee" | jq -Rs '{input_message_hogee: .}'
+          printf 'result_hogee=%s\n' 'success-output' >> "$GITHUB_OUTPUT"
+          printf 'DYNAMIC_ENV_hogee=%s\n' 'written-through-GITHUB_ENV' >> "$GITHUB_ENV"
 
-      - name: Create an expected failure for the steps context
-        id: tolerated_failure
+      - name: Create an expected failure for the steps context hogee
+        id: tolerated_failure_hogee
         shell: bash
         continue-on-error: true
         run: |
           echo 'This step exits with 7, but continue-on-error keeps the job running.'
           exit 7
 
-      - name: Dump all observable contexts
+      - name: Dump all observable contexts hogee
         if: ${{ always() }}
         shell: bash
         env:
-          STEP_LEVEL_ENV: set-only-on-the-dump-step
-          GITHUB_CONTEXT_JSON: ${{ toJSON(github) }}
-          ENV_CONTEXT_JSON: ${{ toJSON(env) }}
-          VARS_CONTEXT_JSON: ${{ toJSON(vars) }}
-          JOB_CONTEXT_JSON: ${{ toJSON(job) }}
-          STEPS_CONTEXT_JSON: ${{ toJSON(steps) }}
-          RUNNER_CONTEXT_JSON: ${{ toJSON(runner) }}
-          STRATEGY_CONTEXT_JSON: ${{ toJSON(strategy) }}
-          MATRIX_CONTEXT_JSON: ${{ toJSON(matrix) }}
-          NEEDS_CONTEXT_JSON: ${{ toJSON(needs) }}
-          INPUTS_CONTEXT_JSON: ${{ toJSON(inputs) }}
-          GITHUB_TOKEN_IS_AVAILABLE: ${{ secrets.GITHUB_TOKEN != '' }}
-          DEMO_SECRET_IS_AVAILABLE: ${{ secrets.CONTEXT_DEMO_SECRET != '' }}
-          LOCKFILE_HASH: ${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}
+          STEP_LEVEL_ENV_hogee: set-only-on-the-dump-step
+          GITHUB_CONTEXT_JSON_hogee: ${{ toJSON(github) }}
+          ENV_CONTEXT_JSON_hogee: ${{ toJSON(env) }}
+          VARS_CONTEXT_JSON_hogee: ${{ toJSON(vars) }}
+          JOB_CONTEXT_JSON_hogee: ${{ toJSON(job) }}
+          STEPS_CONTEXT_JSON_hogee: ${{ toJSON(steps) }}
+          RUNNER_CONTEXT_JSON_hogee: ${{ toJSON(runner) }}
+          STRATEGY_CONTEXT_JSON_hogee: ${{ toJSON(strategy) }}
+          MATRIX_CONTEXT_JSON_hogee: ${{ toJSON(matrix) }}
+          NEEDS_CONTEXT_JSON_hogee: ${{ toJSON(needs) }}
+          INPUTS_CONTEXT_JSON_hogee: ${{ toJSON(inputs) }}
+          GITHUB_TOKEN_IS_AVAILABLE_hogee: ${{ secrets.GITHUB_TOKEN != '' }}
+          DEMO_SECRET_IS_AVAILABLE_hogee: ${{ secrets.CONTEXT_DEMO_SECRET_hogee != '' }}
+          LOCKFILE_HASH_hogee: ${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}
         run: |
           set -euo pipefail
 
-          dump_json() {
-            local title="$1"
-            local value="$2"
-            echo "::group::${title}"
-            printf '%s\n' "$value" | jq .
+          dump_json_hogee() {
+            local title_hogee="$1"
+            local value_hogee="$2"
+            echo "::group::${title_hogee}"
+            printf '%s\n' "$value_hogee" | jq .
             echo '::endgroup::'
           }
 
-          github_without_token="$(printf '%s\n' "$GITHUB_CONTEXT_JSON" | jq 'del(.token)')"
-          dump_json 'github context (token removed)' "$github_without_token"
-          dump_json 'github.event object' "$(printf '%s\n' "$GITHUB_CONTEXT_JSON" | jq '.event')"
-          dump_json 'env context' "$ENV_CONTEXT_JSON"
-          dump_json 'vars context' "$VARS_CONTEXT_JSON"
-          dump_json 'job context' "$JOB_CONTEXT_JSON"
-          dump_json 'steps context' "$STEPS_CONTEXT_JSON"
-          dump_json 'runner context' "$RUNNER_CONTEXT_JSON"
-          dump_json 'strategy context' "$STRATEGY_CONTEXT_JSON"
-          dump_json 'matrix context' "$MATRIX_CONTEXT_JSON"
-          dump_json 'needs context' "$NEEDS_CONTEXT_JSON"
-          dump_json 'inputs context' "$INPUTS_CONTEXT_JSON"
+          github_without_token_hogee="$(printf '%s\n' "$GITHUB_CONTEXT_JSON_hogee" | jq 'del(.token)')"
+          dump_json_hogee 'github context (token removed)' "$github_without_token_hogee"
+          dump_json_hogee 'github.event object' "$(printf '%s\n' "$GITHUB_CONTEXT_JSON_hogee" | jq '.event')"
+          dump_json_hogee 'env context' "$ENV_CONTEXT_JSON_hogee"
+          dump_json_hogee 'vars context' "$VARS_CONTEXT_JSON_hogee"
+          dump_json_hogee 'job context' "$JOB_CONTEXT_JSON_hogee"
+          dump_json_hogee 'steps context' "$STEPS_CONTEXT_JSON_hogee"
+          dump_json_hogee 'runner context' "$RUNNER_CONTEXT_JSON_hogee"
+          dump_json_hogee 'strategy context' "$STRATEGY_CONTEXT_JSON_hogee"
+          dump_json_hogee 'matrix context' "$MATRIX_CONTEXT_JSON_hogee"
+          dump_json_hogee 'needs context' "$NEEDS_CONTEXT_JSON_hogee"
+          dump_json_hogee 'inputs context' "$INPUTS_CONTEXT_JSON_hogee"
 
           echo '::group::selected default environment variables'
-          for variable_name in \
+          for variable_name_hogee in \
             CI GITHUB_ACTION GITHUB_ACTOR GITHUB_ACTOR_ID GITHUB_API_URL \
             GITHUB_BASE_REF GITHUB_EVENT_NAME GITHUB_EVENT_PATH GITHUB_GRAPHQL_URL \
             GITHUB_HEAD_REF GITHUB_JOB GITHUB_REF GITHUB_REF_NAME \
@@ -203,7 +216,7 @@ jobs:
             GITHUB_SERVER_URL GITHUB_SHA GITHUB_TRIGGERING_ACTOR GITHUB_WORKFLOW \
             GITHUB_WORKFLOW_REF GITHUB_WORKFLOW_SHA GITHUB_WORKSPACE RUNNER_ARCH \
             RUNNER_NAME RUNNER_OS RUNNER_TEMP RUNNER_TOOL_CACHE; do
-            printf '%-30s = %s\n' "$variable_name" "${!variable_name-<unset>}"
+            printf '%-30s = %s\n' "$variable_name_hogee" "${!variable_name_hogee-<unset>}"
           done
           echo '::endgroup::'
 
@@ -212,29 +225,29 @@ jobs:
           echo '::endgroup::'
 
           echo '::group::derived values and secret availability'
-          printf 'DYNAMIC_ENV                   = %s\n' "$DYNAMIC_ENV"
-          printf 'LOCKFILE_HASH                 = %s\n' "${LOCKFILE_HASH:-<no matching lockfile>}"
-          printf 'GITHUB_TOKEN_IS_AVAILABLE     = %s\n' "$GITHUB_TOKEN_IS_AVAILABLE"
-          printf 'DEMO_SECRET_IS_AVAILABLE      = %s\n' "$DEMO_SECRET_IS_AVAILABLE"
+          printf 'DYNAMIC_ENV_hogee                   = %s\n' "$DYNAMIC_ENV_hogee"
+          printf 'LOCKFILE_HASH_hogee                 = %s\n' "${LOCKFILE_HASH_hogee:-<no matching lockfile>}"
+          printf 'GITHUB_TOKEN_IS_AVAILABLE_hogee     = %s\n' "$GITHUB_TOKEN_IS_AVAILABLE_hogee"
+          printf 'DEMO_SECRET_IS_AVAILABLE_hogee      = %s\n' "$DEMO_SECRET_IS_AVAILABLE_hogee"
           echo 'secrets context values are intentionally not printed.'
           echo 'jobs context is only available while setting outputs in a reusable workflow.'
           echo '::endgroup::'
 
-      - name: Write a compact job summary
+      - name: Write a compact job summary hogee
         if: ${{ always() }}
         shell: bash
         env:
-          MATRIX_PROFILE: ${{ matrix.profile }}
-          GENERATED_VALUE: ${{ needs.prepare.outputs.generated_value }}
-          FAILED_OUTCOME: ${{ steps.tolerated_failure.outcome }}
-          FAILED_CONCLUSION: ${{ steps.tolerated_failure.conclusion }}
+          MATRIX_PROFILE_hogee: ${{ matrix.profile_hogee }}
+          GENERATED_VALUE_hogee: ${{ needs.prepare_hogee.outputs.generated_value_hogee }}
+          FAILED_OUTCOME_hogee: ${{ steps.tolerated_failure_hogee.outcome }}
+          FAILED_CONCLUSION_hogee: ${{ steps.tolerated_failure_hogee.conclusion }}
         run: |
           {
             echo '## Context playground'
             echo
-            printf -- '- Matrix profile: `%s`\n' "$MATRIX_PROFILE"
-            printf -- '- Job output via `needs`: `%s`\n' "$GENERATED_VALUE"
-            printf -- '- Tolerated step outcome: `%s`\n' "$FAILED_OUTCOME"
-            printf -- '- Tolerated step conclusion: `%s`\n' "$FAILED_CONCLUSION"
+            printf -- '- Matrix profile: `%s`\n' "$MATRIX_PROFILE_hogee"
+            printf -- '- Job output via `needs`: `%s`\n' "$GENERATED_VALUE_hogee"
+            printf -- '- Tolerated step outcome: `%s`\n' "$FAILED_OUTCOME_hogee"
+            printf -- '- Tolerated step conclusion: `%s`\n' "$FAILED_CONCLUSION_hogee"
             echo '- Full context dumps are available in the grouped step logs.'
           } >> "$GITHUB_STEP_SUMMARY"
