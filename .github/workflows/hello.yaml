@@ -29,7 +29,7 @@ jobs:
     goodby:
         name: goodbyの表示名。goodbyはid扱いでこっちが表示用
         needs: hello
-        if: success(0)
+        if: success()
         timeout-minutes: 30
         runs-on: ubuntu-latest
         steps:
