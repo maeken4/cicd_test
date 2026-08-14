@@ -13,6 +13,6 @@ jobs:
               with: # どのブランチをチェックアウトするか。省略したら、コミットされたbranchになる。
                 ref: main
             - run: |
-                cat
                 ls
                 whoami
+                tree
