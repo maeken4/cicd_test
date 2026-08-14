@@ -27,11 +27,22 @@ jobs:
                 python --version
                 python main.py
     goodby:
+        name: goodbyの表示名。goodbyはid扱いでこっちが表示用
+        needs: hello
+        if: success(0)
+        timeout-minutes: 30
         runs-on: ubuntu-latest
         steps:
             # jobが分かれているので、この段階ではcheckoutされておらず
             # main.pyとかもなくてエラーになる
+
+            # GitHub Actionsの run は通常、
+            # コマンドがゼロ以外の終了コードを返すと、その時点でステップを失敗させます。
+            # 失敗すると同じジョブの後続ステップも通常はスキップされます。
             - run: |
                 python --version
                 python main.py
                 python --version
+            # これはスキップされて実行されない
+            - uses: actions/checkout@v7
+
