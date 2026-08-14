@@ -4,10 +4,15 @@ jobs:
     hello:
         runs-on: ubuntu-latest
         steps:
+            # リテラルブロック。改行を維持したまま一つの文字列としてrunに渡す。各行がそのまま実行される。
             - run: |
                 echo "hello, world"
-                tree
-                invalid-command
+                tree | cat
+                ls
             - uses: actions/checkout@v4
               with:
                 ref: main
+            - run: |
+                cat
+                ls
+                whoami
