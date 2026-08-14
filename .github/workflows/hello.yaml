@@ -16,3 +16,6 @@ jobs:
                 ls
                 whoami
                 tree
+            - uses: actions/chackout@v7
+            - run: >
+                ls
